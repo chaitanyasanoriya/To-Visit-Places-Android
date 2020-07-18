@@ -3,6 +3,12 @@
     <string name="number_of_contacts">Number of Contacts: </string>
     <string name="title_activity_contact_details">ContactDetailsActivity</string>
     <string name="number_of_places">"Number of Favourite Places: "</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="cafe">Cafe</string>
+    <string name="hospital">Hospital</string>
+    <string name="restaurant">Restaurant</string>
+    <string name="museum">Museum</string>
+    <string name="police">Police</string>
     <!--
     This string is used for square devices and overridden by hello_world in
     values-round/strings.xml for round devices.
