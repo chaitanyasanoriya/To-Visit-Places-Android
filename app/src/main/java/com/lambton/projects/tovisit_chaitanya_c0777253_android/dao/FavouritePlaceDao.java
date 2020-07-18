@@ -16,7 +16,7 @@ import java.util.List;
 public interface FavouritePlaceDao
 {
     @Insert
-    void insert(FavouritePlace favouritePlace);
+    long insert(FavouritePlace favouritePlace);
 
     @Update
     void update(FavouritePlace favouritePlace);

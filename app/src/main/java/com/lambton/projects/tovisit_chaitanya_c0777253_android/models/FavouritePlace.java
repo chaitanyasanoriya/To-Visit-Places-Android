@@ -15,7 +15,7 @@ import java.util.Date;
 public class FavouritePlace implements Serializable
 {
     @PrimaryKey(autoGenerate = true)
-    private int id;
+    private long id;
 
     @Nullable
     private String title;
@@ -63,12 +63,12 @@ public class FavouritePlace implements Serializable
         this.section = section;
     }
 
-    public int getId()
+    public long getId()
     {
         return id;
     }
 
-    public void setId(int id)
+    public void setId(long id)
     {
         this.id = id;
     }

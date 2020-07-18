@@ -34,7 +34,7 @@ public abstract class FavouritePlaceDatabase extends RoomDatabase
         return mInstance;
     }
 
-    private static RoomDatabase.Callback roomCallBack = new RoomDatabase.Callback()
+    /*private static RoomDatabase.Callback roomCallBack = new RoomDatabase.Callback()
     {
         @Override
         public void onCreate(@NonNull SupportSQLiteDatabase db)
@@ -62,5 +62,5 @@ public abstract class FavouritePlaceDatabase extends RoomDatabase
             favouritePlaceDao.insert(new FavouritePlace("test","123",0,0,new Date(),false,false));
             return null;
         }
-    }
+    }*/
 }

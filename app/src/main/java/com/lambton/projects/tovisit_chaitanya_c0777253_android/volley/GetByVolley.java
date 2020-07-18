@@ -9,6 +9,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.maps.android.PolyUtil;
+import com.lambton.projects.tovisit_chaitanya_c0777253_android.Utils;
 
 import org.json.JSONObject;
 
@@ -17,44 +18,45 @@ import java.util.List;
 
 public class GetByVolley {
 
-    public static void getDirection(JSONObject jsonObject, GoogleMap googleMap, Location location)
+    public static String[] getDirection(JSONObject jsonObject, GoogleMap googleMap, LatLng latLng, int strokeColor, String title, String snippet)
     {
         HashMap<String, String> distances = null;
         VolleyParser directionParser = new VolleyParser();
         distances = directionParser.parseDistance(jsonObject);
         String distance = distances.get("distance");
         String duration = distances.get("duration");
-        String[] directionsList = directionParser.parseDirections(jsonObject);
-        displayDirections(directionsList, distance, duration, googleMap, location);
+        String [] directionsList = directionParser.parseDirections(jsonObject);
+        displayDirections(directionsList, googleMap, latLng, strokeColor, title, snippet);
+        return new String[] {distance,duration};
     }
 
-    private static void displayDirections(String[] directionsList, String distance, String duration, GoogleMap googleMap, Location location) {
-        googleMap.clear();
-        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-        MarkerOptions options = new MarkerOptions().position(latLng)
-                .title("Duration: "+ duration)
-                .snippet("Distance: "+distance)
-                .draggable(true);
-        googleMap.addMarker(options);
+    private static void displayDirections(String[] directionsList, GoogleMap googleMap, LatLng latLng, int strokeColor, String title, String snippet) {
+        Utils.clearPolylines();
+//        MarkerOptions options = new MarkerOptions().position(latLng)
+//                .title(title)
+//                .snippet(snippet)
+//                .draggable(true);
+//        googleMap.addMarker(options);
         for(String direction: directionsList)
         {
             PolylineOptions polylineOptions = new PolylineOptions()
-                    .color(Color.RED)
+                    .color(strokeColor)
                     .width(10)
-                    .addAll(PolyUtil.decode(direction));
-            googleMap.addPolyline(polylineOptions);
+                    .addAll(PolyUtil.decode(direction)).clickable(true);
+            Utils.addPolyline(googleMap.addPolyline(polylineOptions));
         }
     }
 
-    public static void getNearbyPlaces(JSONObject jsonObject, GoogleMap googleMap)
+    public static void getNearbyPlaces(JSONObject jsonObject, GoogleMap googleMap, int icon)
     {
         List<HashMap<String, String>> nearbyPlaces = null;
         VolleyParser dataParser = new VolleyParser();
         nearbyPlaces = dataParser.parsePlace(jsonObject);
-        showNearbyPlaces(nearbyPlaces, googleMap);
+        showNearbyPlaces(nearbyPlaces, googleMap,icon);
     }
 
-    private static void showNearbyPlaces(List<HashMap<String, String>> nearbyPlaces, GoogleMap googleMap) {
+    private static void showNearbyPlaces(List<HashMap<String, String>> nearbyPlaces, GoogleMap googleMap, int icon) {
+        System.out.println("clearing");
         googleMap.clear();
         for (HashMap<String, String> nearbyPlace: nearbyPlaces)
         {
@@ -67,7 +69,7 @@ public class GetByVolley {
             LatLng latLng = new LatLng(lat,lng);
             MarkerOptions options = new MarkerOptions().position(latLng)
                     .title(placeName)
-                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+                    .icon(BitmapDescriptorFactory.fromResource(icon));
             googleMap.addMarker(options);
         }
     }

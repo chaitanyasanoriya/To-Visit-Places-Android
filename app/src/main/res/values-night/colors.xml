@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="text">#ffffff</color>
+    <color name="translucent_color">#CC000000</color>
+    <color name="search">#ffffff</color>
 </resources>

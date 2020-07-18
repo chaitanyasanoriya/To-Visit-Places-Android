@@ -85,8 +85,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public void onBindViewHolder(@NonNull RecyclerViewAdapter.ViewHolder holder, int position)
     {
         FavouritePlace favouritePlace = mFavouritePlaceList.get(position);
+        System.out.println("id: "+favouritePlace.getId()+" title: "+favouritePlace.getTitle()+" visited: "+favouritePlace.isVisited());
         String title = favouritePlace.getTitle();
-        if(title.isEmpty())
+        if(title == null || title.isEmpty())
         {
             title = "Created on " + mDF.format("EEE, MM-dd-yyyy hh:mm", favouritePlace.getCreatedDate());
         }

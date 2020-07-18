@@ -22,4 +22,121 @@
         map:itemHorizontalTranslationEnabled="true"
         map:layout_constraintBottom_toBottomOf="parent"
         map:menu="@menu/bottom_navigation_menu" />
+
+    <Button
+        android:id="@+id/back_btn"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_margin="10dp"
+        android:background="@drawable/ic_baseline_arrow_back_ios_24"
+        android:onClick="backClicked"
+        map:layout_constraintLeft_toLeftOf="parent"
+        map:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/search_layout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:background="@drawable/rounded_corners"
+        android:padding="10dp"
+        map:layout_constraintLeft_toRightOf="@id/back_btn"
+        map:layout_constraintRight_toRightOf="parent"
+        map:layout_constraintTop_toTopOf="parent">
+
+        <EditText
+            android:id="@+id/search_edittext"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="10dp"
+            android:background="@android:color/transparent"
+            android:hint="Address"
+            android:singleLine="true"
+            android:textColorHint="@color/text"
+            map:layout_constraintLeft_toLeftOf="parent"
+            map:layout_constraintRight_toLeftOf="@id/search_btn"
+            map:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/search_btn"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/ic_baseline_search_24"
+            android:onClick="searchAddressClicked"
+            map:layout_constraintBottom_toBottomOf="@id/search_edittext"
+            map:layout_constraintDimensionRatio="1:1"
+            map:layout_constraintRight_toRightOf="parent"
+            map:layout_constraintTop_toTopOf="@id/search_edittext" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/style_layout"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="10dp"
+        android:background="@drawable/rounded_corners"
+        android:padding="5dp"
+        map:layout_constraintRight_toRightOf="parent"
+        map:layout_constraintTop_toBottomOf="@id/search_layout">
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/ic_baseline_line_style_24"
+            android:onClick="showMapStyleAlert" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="10dp"
+        android:background="@drawable/rounded_corners"
+        android:padding="5dp"
+        map:layout_constraintRight_toRightOf="parent"
+        map:layout_constraintTop_toBottomOf="@id/style_layout">
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@mipmap/map_type"
+            android:backgroundTint="@color/search"
+            android:onClick="showMapTypeAlert" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/navigate_layout"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginBottom="10dp"
+        android:layout_marginRight="10dp"
+        android:background="@drawable/circle"
+        android:padding="5dp"
+        map:layout_constraintRight_toRightOf="parent"
+        map:layout_constraintBottom_toTopOf="@id/botton_navigation_view">
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/ic_baseline_navigation_24"
+            android:onClick="navigateClicked" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <ToggleButton
+        android:id="@+id/toggle_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:onClick="modeClicked"
+        android:background="@drawable/rounded_corners"
+        android:text="ToggleButton"
+        android:textSize="12sp"
+        android:textOff="Driving"
+        android:textOn="Walking"
+        map:layout_constraintRight_toRightOf="parent"
+        map:layout_constraintBottom_toTopOf="@id/navigate_layout" />
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>

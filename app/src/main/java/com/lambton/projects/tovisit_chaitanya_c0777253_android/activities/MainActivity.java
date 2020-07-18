@@ -45,13 +45,13 @@ public class MainActivity extends AppCompatActivity
 //        populate();
     }
 
-    private void populate()
+    /*private void populate()
     {
         for (int i = 0; i < 5; i++)
         {
             mFavouritePlaceViewModel.insert(new FavouritePlace(String.valueOf(i), String.valueOf(i), 0, 0, new Date(), true,false));
         }
-    }
+    }*/
 
     private void setupRecyclerView()
     {

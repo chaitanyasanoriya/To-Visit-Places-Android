@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 
 import androidx.lifecycle.LiveData;
 
+import com.lambton.projects.tovisit_chaitanya_c0777253_android.callbacks.Callbacks;
 import com.lambton.projects.tovisit_chaitanya_c0777253_android.dao.FavouritePlaceDao;
 import com.lambton.projects.tovisit_chaitanya_c0777253_android.databases.FavouritePlaceDatabase;
 import com.lambton.projects.tovisit_chaitanya_c0777253_android.models.FavouritePlace;
@@ -27,9 +28,9 @@ public class FavouritePlaceRepository
         System.out.println(7);
     }
 
-    public void insert(FavouritePlace favouritePlace)
+    public void insert(FavouritePlace favouritePlace, Callbacks callbacks)
     {
-        new FavouritePlaceRepository.InsertCarsAsyncTask(mFavouritePlaceDao).execute(favouritePlace);
+        new FavouritePlaceRepository.InsertCarsAsyncTask(mFavouritePlaceDao, callbacks).execute(favouritePlace);
     }
 
     public void update(FavouritePlace favouritePlace)
@@ -47,21 +48,28 @@ public class FavouritePlaceRepository
         return mFavouritePlaceList;
     }
 
-    private static class InsertCarsAsyncTask extends AsyncTask<FavouritePlace, Void, Void>
+    private static class InsertCarsAsyncTask extends AsyncTask<FavouritePlace, Void, Long>
     {
         private FavouritePlaceDao mFavouritePlaceDao;
+        private Callbacks mCallbacks;
 
-        private InsertCarsAsyncTask(FavouritePlaceDao mFavouritePlaceDao)
+        private InsertCarsAsyncTask(FavouritePlaceDao mFavouritePlaceDao, Callbacks callbacks)
         {
-
             this.mFavouritePlaceDao = mFavouritePlaceDao;
+            this.mCallbacks = callbacks;
         }
 
         @Override
-        protected Void doInBackground(FavouritePlace ... favouritePlaces)
+        protected Long doInBackground(FavouritePlace ... favouritePlaces)
         {
-            mFavouritePlaceDao.insert(favouritePlaces[0]);
-            return null;
+            return mFavouritePlaceDao.insert(favouritePlaces[0]);
+        }
+
+        @Override
+        protected void onPostExecute(Long id)
+        {
+            mCallbacks.inserted(id);
+            super.onPostExecute(id);
         }
     }
 
@@ -77,6 +85,7 @@ public class FavouritePlaceRepository
         @Override
         protected Void doInBackground(FavouritePlace ... favouritePlaces)
         {
+            System.out.println("doInBackground id: "+favouritePlaces[0].getId()+" title: "+favouritePlaces[0].getTitle()+" visited: "+favouritePlaces[0].isVisited());
             mFavouritePlaceDao.update(favouritePlaces[0]);
             return null;
         }
