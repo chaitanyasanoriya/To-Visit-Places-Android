@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/cafe"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_local_cafe_24"
+        android:title="@string/cafe" />
+    <item
+        android:id="@+id/hospital"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_local_hospital_24"
+        android:title="@string/hospital" />
+    <item
+        android:id="@+id/restaurant"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_restaurant_24"
+        android:title="@string/restaurant" />
+    <item
+        android:id="@+id/museum"
+        android:enabled="true"
+        android:icon="@mipmap/museum"
+        android:iconTint="@android:color/white"
+        android:title="@string/museum" />
+    <item
+        android:id="@+id/police"
+        android:enabled="true"
+        android:icon="@mipmap/police"
+        android:title="@string/police" />
+</menu>

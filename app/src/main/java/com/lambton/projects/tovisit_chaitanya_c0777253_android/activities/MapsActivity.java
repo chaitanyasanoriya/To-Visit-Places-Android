@@ -35,6 +35,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
@@ -54,6 +55,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.Locale;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, Callbacks
 {
@@ -79,6 +81,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private int mStrokeColor = Color.RED;
     private String mMode = "driving";
     private ToggleButton mToggleButton;
+    private Marker mInfoMarker;
+    private String [] mInfoString;
 
 
     @Override
@@ -200,6 +204,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnInfoWindowLongClickListener(mOnInfoWindowLongClickListener);
         mMap.setOnMapLongClickListener(mOnMapLongClickListener);
         mMap.setOnMarkerClickListener(mOnMarkerClickListener);
+        mMap.setOnPolylineClickListener(mOnPolylineClickListener);
     }
 
     private void setUISettings()
@@ -607,7 +612,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, getDirectionURL(latLng), null, new Response.Listener<JSONObject>() {
                 @Override
                 public void onResponse(JSONObject response) {
-                    String [] strings = GetByVolley.getDirection(response,mMap, finalLatLng,mStrokeColor, finalTitle, finalSnippet);
+                    mInfoString = GetByVolley.getDirection(response,mMap, finalLatLng,mStrokeColor, finalTitle, finalSnippet);
                 }
             },null);
             VolleySingleton.getInstance(this).addToRequestQueue(jsonObjectRequest);
@@ -653,7 +658,34 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         @Override
         public void onPolylineClick(Polyline polyline)
         {
-
+            LatLng place1 = polyline.getPoints().get(0);
+            LatLng place2 = polyline.getPoints().get(1);
+            LatLng mid_point = Utils.midPoint(place1.latitude, place1.longitude, place2.latitude, place2.longitude);
+            double distance = Utils.distance(place1.latitude, place1.longitude, place2.latitude, place2.longitude);
+            showDistanceMarker(mid_point, mInfoString[0], mInfoString[1]);
         }
     };
+
+    /**
+     * Method to show Marker at Location will distance and snippet
+     * @param latLng - Location of the Marker
+     * @param distance - Distance to be displayed
+     * @param snippet - Snippet to be displayed
+     */
+    private void showDistanceMarker(LatLng latLng, String distance, String snippet)
+    {
+        if (mInfoMarker != null)
+        {
+            mInfoMarker.remove();
+        }
+        BitmapDescriptor transparent = BitmapDescriptorFactory.fromResource(R.mipmap.transparent);
+        MarkerOptions options = new MarkerOptions()
+                .position(latLng)
+                .title(distance)
+                .snippet(snippet)
+                .icon(transparent); //puts the info window on the polyline
+
+        mInfoMarker = mMap.addMarker(options);
+        mInfoMarker.showInfoWindow();
+    }
 }
