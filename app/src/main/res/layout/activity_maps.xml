@@ -158,4 +158,12 @@
         map:layout_constraintBottom_toTopOf="@id/navigate_layout" />
 
 
+    <ImageView
+        android:id="@+id/image"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        map:layout_constraintBottom_toTopOf="@id/toggle_btn"
+        map:layout_constraintRight_toRightOf="parent"
+        />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

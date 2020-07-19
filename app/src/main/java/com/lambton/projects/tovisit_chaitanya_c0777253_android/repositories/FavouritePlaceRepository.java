@@ -19,13 +19,9 @@ public class FavouritePlaceRepository
 
     public FavouritePlaceRepository(Application application)
     {
-        System.out.println(4);
         FavouritePlaceDatabase db = FavouritePlaceDatabase.getInstance(application);
-        System.out.println(5);
         mFavouritePlaceDao = db.mFavouritePlaceDao();
-        System.out.println(6);
         mFavouritePlaceList = mFavouritePlaceDao.getAllFavouritePlaces();
-        System.out.println(7);
     }
 
     public void insert(FavouritePlace favouritePlace, Callbacks callbacks)
@@ -88,7 +84,6 @@ public class FavouritePlaceRepository
         @Override
         protected Void doInBackground(FavouritePlace ... favouritePlaces)
         {
-            System.out.println("doInBackground id: "+favouritePlaces[0].getId()+" title: "+favouritePlaces[0].getTitle()+" visited: "+favouritePlaces[0].isVisited());
             mFavouritePlaceDao.update(favouritePlaces[0]);
             return null;
         }

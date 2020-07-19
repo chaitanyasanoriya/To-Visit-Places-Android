@@ -2,12 +2,24 @@ package com.lambton.projects.tovisit_chaitanya_c0777253_android;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.ColorFilter;
+import android.graphics.LightingColorFilter;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.location.Address;
 import android.location.Location;
 import android.text.format.DateFormat;
 
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 
 import java.lang.reflect.Field;
@@ -66,7 +78,6 @@ public class Utils
      */
     public static String[] getFormattedAddress(Address address)
     {
-        dump(address);
         StringBuilder title = new StringBuilder();
         StringBuilder snippet = new StringBuilder();
         if (address.getSubThoroughfare() != null)
@@ -105,7 +116,6 @@ public class Utils
         {
             title.append(getFormattedDate());
         }
-        System.out.println("title: "+title+" snippet: "+snippet);
         return new String[]{title.toString(), snippet.toString()};
     }
 
@@ -263,5 +273,39 @@ public class Utils
         URL.append("&mode=" + mode);
         System.out.println(URL);
         return URL.toString();
+    }
+
+    public static void setLightMarkers(Context context, GoogleMap googleMap, int res)
+    {
+        Bitmap sourceBitmap = BitmapFactory.decodeResource(context.getResources(),res);
+        Paint paint = new Paint();
+        paint.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN));
+        Bitmap bitmapResult = Bitmap.createBitmap(sourceBitmap.getWidth(), sourceBitmap.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmapResult);
+        canvas.drawBitmap(sourceBitmap, 0, 0, paint);
+        googleMap.clear();
+        List<Marker> markerList = new ArrayList<>();
+        for(Marker marker: mMarkerList)
+        {
+            MarkerOptions markerOptions = new MarkerOptions().position(marker.getPosition()).title(marker.getTitle()).snippet(marker.getSnippet()).draggable(marker.isDraggable()).icon(BitmapDescriptorFactory.fromBitmap(bitmapResult));
+            markerList.add(googleMap.addMarker(markerOptions));
+            marker.remove();
+        }
+        mMarkerList.clear();
+        mMarkerList.addAll(markerList);
+//        return bitmapResult;
+    }
+
+    public static void setOriginalMarker(int res, GoogleMap googleMap)
+    {
+        List<Marker> markerList = new ArrayList<>();
+        for(Marker marker: mMarkerList)
+        {
+            marker.remove();
+            MarkerOptions markerOptions = new MarkerOptions().position(marker.getPosition()).title(marker.getTitle()).snippet(marker.getSnippet()).draggable(marker.isDraggable()).icon(BitmapDescriptorFactory.fromResource(res));
+            markerList.add(googleMap.addMarker(markerOptions));
+        }
+        mMarkerList.clear();
+        mMarkerList.addAll(markerList);
     }
 }

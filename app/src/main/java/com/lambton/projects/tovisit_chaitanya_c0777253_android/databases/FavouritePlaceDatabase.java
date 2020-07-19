@@ -22,7 +22,6 @@ public abstract class FavouritePlaceDatabase extends RoomDatabase
 
     public static synchronized FavouritePlaceDatabase getInstance(Context context)
     {
-        System.out.println("getInstance");
         if(mInstance == null)
         {
             mInstance = Room.databaseBuilder(context.getApplicationContext(),

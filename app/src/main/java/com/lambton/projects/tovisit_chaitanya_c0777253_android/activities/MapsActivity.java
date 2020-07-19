@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
@@ -26,6 +27,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.RadioGroup;
 import android.widget.ToggleButton;
 
@@ -74,7 +76,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private BottomNavigationView mBottomNavigationView;
     private Marker mMarker;
     private int mIcon = R.mipmap.cafe_marker;
-        private FavouritePlace mFavouritePlace = null;
+    private FavouritePlace mFavouritePlace = null;
     private FavouritePlaceViewModel mFavouritePlaceViewModel;
     private EditText mSearchEditText;
     private int mMapStyle;
@@ -278,7 +280,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         URL.append("&radius=" + RADIUS);
         URL.append("&type=" + placeType);
         URL.append("&key=" + getString(R.string.google_maps_key));
-        System.out.println(URL);
         return URL.toString();
     }
 
@@ -360,7 +361,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 {
                     MapsActivity.this.runOnUiThread(() -> setInfo(Utils.getFormattedDate(), "", mMarker));
                 }
-            } catch (IOException e)
+            } catch (Exception e)
             {
                 e.printStackTrace();
                 MapsActivity.this.runOnUiThread(() -> setInfo(Utils.getFormattedDate(), "", mMarker));
@@ -370,7 +371,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void setInfo(String title, String snippet, Marker mMarker)
     {
-        System.out.println("title: " + title + " snippet: " + snippet);
         mMarker.setTitle(title);
         mMarker.setSnippet(snippet);
         mMarker.showInfoWindow();
@@ -433,7 +433,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     mFavouritePlace = favouritePlace;
                     marker.setTitle(strings[0]);
                     marker.setSnippet(strings[1]);
-                    setMarkerVisitedStatus(marker,favouritePlace);
+                    setMarkerVisitedStatus(marker, favouritePlace);
                     marker.showInfoWindow();
                 });
             } catch (IOException e)
@@ -445,21 +445,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void setMarkerVisitedStatus(Marker marker, FavouritePlace favouritePlace)
     {
-        if(favouritePlace.isVisited())
+        if (favouritePlace.isVisited())
         {
-            marker.setSnippet(marker.getSnippet()+VISITED_TEXT);
-        }
-        else
+            marker.setSnippet(marker.getSnippet() + VISITED_TEXT);
+        } else
         {
-            marker.setSnippet(marker.getSnippet().replace(VISITED_TEXT,""));
+            marker.setSnippet(marker.getSnippet().replace(VISITED_TEXT, ""));
         }
     }
 
     private void showDeleteFavouritePlace(Marker marker)
     {
         new AlertDialog.Builder(this)
-                .setTitle("Delete Contact")
-                .setMessage("Are you sure you want to delete this contact?")
+                .setTitle("Delete Favorite Place")
+                .setMessage("Are you sure you want to delete this favourite place?")
                 .setCancelable(true)
                 .setPositiveButton("Yes", (dialog, which) -> deletePlace(marker))
                 .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
@@ -570,22 +569,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 case R.id.standard_radio:
                     updateMap(R.raw.standard);
                     mSelectedSort = R.id.standard_radio;
+                    Utils.setOriginalMarker(mIcon,mMap);
                     break;
                 case R.id.retro_radio:
                     updateMap(R.raw.retro);
                     mSelectedSort = R.id.retro_radio;
+                    Utils.setOriginalMarker(mIcon,mMap);
                     break;
                 case R.id.dark_radio:
                     updateMap(R.raw.dark);
                     mSelectedSort = R.id.dark_radio;
+                    Utils.setLightMarkers(this,mMap,mIcon);
                     break;
                 case R.id.night_radio:
                     updateMap(R.raw.night);
                     mSelectedSort = R.id.night_radio;
+                    Utils.setLightMarkers(this,mMap,mIcon);
                     break;
                 case R.id.aubergine_radio:
                     updateMap(R.raw.aubergine);
                     mSelectedSort = R.id.aubergine_radio;
+                    Utils.setLightMarkers(this,mMap,mIcon);
             }
         });
 
@@ -681,7 +685,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Utils.showError("Destination not selected", "Please select a destination to navigate to", MapsActivity.this);
         } else
         {
-            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, Utils.getDirectionURL(getCurrentLocation(),latLng, this,mMode), null, response -> mInfoString = GetByVolley.getDirection(response, mMap, mStrokeColor), null);
+            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, Utils.getDirectionURL(getCurrentLocation(), latLng, this, mMode), null, response -> mInfoString = GetByVolley.getDirection(response, mMap, mStrokeColor), null);
             VolleySingleton.getInstance(this).addToRequestQueue(jsonObjectRequest);
         }
     }
@@ -764,16 +768,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if (mFavouritePlace != null)
             {
                 updateFavourite(marker, mFavouritePlace);
-            }
-            else
+            } else
             {
-                setInfoAsync(marker.getPosition(),marker);
+                setInfoAsync(marker.getPosition(), marker);
             }
         }
     };
 
     public void myLocationClicked(View view)
     {
+//        Utils.setLightMarkers(this,mMap,mIcon);
+//        Bitmap bitmap = Utils.setLightMarkers(this,mMap,mIcon);
+//        ((ImageView) findViewById(R.id.image)).setImageBitmap(bitmap);
         enableUserLocationAndZoom();
     }
 
