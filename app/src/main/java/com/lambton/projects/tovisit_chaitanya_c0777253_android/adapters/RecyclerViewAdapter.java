@@ -3,6 +3,7 @@ package com.lambton.projects.tovisit_chaitanya_c0777253_android.adapters;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.Build;
 import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,8 +15,10 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.lambton.projects.tovisit_chaitanya_c0777253_android.activities.MapsActivity;
 import com.lambton.projects.tovisit_chaitanya_c0777253_android.models.FavouritePlace;
 
 import java.util.List;
@@ -37,8 +40,17 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     public void addFavouritePlaceList(FavouritePlace favouritePlace, int position)
     {
+        if(mFavouritePlaceList.size() == position - 1)
+        {
+            position--;
+        }
         mFavouritePlaceList.add(position,favouritePlace);
         this.notifyItemInserted(position);
+    }
+
+    public FavouritePlace getFavouritePlace(int position)
+    {
+        return mFavouritePlaceList.get(position);
     }
 
 
@@ -48,6 +60,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         public TextView mSubTitleTextView;
         public LinearLayout mMainLayout;
         public boolean isSection = false;
+        public boolean visited = false;
 
         public ViewHolder(View itemView)
         {
@@ -82,10 +95,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerViewAdapter.ViewHolder holder, int position)
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position)
     {
         FavouritePlace favouritePlace = mFavouritePlaceList.get(position);
-        System.out.println("id: "+favouritePlace.getId()+" title: "+favouritePlace.getTitle()+" visited: "+favouritePlace.isVisited());
+        holder.visited = favouritePlace.isVisited();
         String title = favouritePlace.getTitle();
         if(title == null || title.isEmpty())
         {
@@ -95,22 +108,37 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         holder.mSubTitleTextView.setText(favouritePlace.getSubtitle());
         if(favouritePlace.isSection())
         {
-            holder.mMainLayout.setBackgroundColor(Color.LTGRAY);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+            {
+                holder.mMainLayout.setBackgroundColor(mContext.getColor(R.color.section));
+            }
+            else
+            {
+                holder.mMainLayout.setBackgroundColor(ContextCompat.getColor(mContext, R.color.section));
+            }
             holder.mSubTitleTextView.setVisibility(View.GONE);
             holder.isSection = true;
         }
         else
         {
-            holder.mMainLayout.setBackgroundColor(Color.WHITE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+            {
+                holder.mMainLayout.setBackgroundColor(mContext.getColor(R.color.background));
+            }
+            else
+            {
+                holder.mMainLayout.setBackgroundColor(ContextCompat.getColor(mContext, R.color.background));
+            }
             holder.mSubTitleTextView.setVisibility(View.VISIBLE);
             holder.isSection = false;
         }
-        holder.mMainLayout.setOnClickListener(new View.OnClickListener()
+        holder.mMainLayout.setOnClickListener(view ->
         {
-            @Override
-            public void onClick(View view)
+            if(!favouritePlace.isSection())
             {
-                // Go to next activity
+                Intent intent = new Intent(mContext, MapsActivity.class);
+                intent.putExtra("favouriteplace",favouritePlace);
+                mContext.startActivity(intent);
             }
         });
     }

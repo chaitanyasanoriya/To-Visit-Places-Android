@@ -3,11 +3,14 @@ package com.lambton.projects.tovisit_chaitanya_c0777253_android;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.location.Address;
+import android.location.Location;
 import android.text.format.DateFormat;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.Polyline;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -17,6 +20,7 @@ public class Utils
 {
 
     private static List<Polyline> mPolylineList = new ArrayList<>();
+    private static List<Marker> mMarkerList = new ArrayList<>();
 
     /**
      * Method to Sort LatLng Clockwise, so that the Markers will always form Quadrilateral
@@ -62,27 +66,31 @@ public class Utils
      */
     public static String[] getFormattedAddress(Address address)
     {
+        dump(address);
         StringBuilder title = new StringBuilder();
         StringBuilder snippet = new StringBuilder();
-        title.append(address.getFeatureName());
         if (address.getSubThoroughfare() != null)
         {
-            snippet.append(address.getSubThoroughfare());
+            title.append(address.getSubThoroughfare());
         }
         if (address.getThoroughfare() != null)
         {
-            if (!snippet.toString().isEmpty())
+            if (!title.toString().isEmpty())
             {
-                snippet.append(", ");
+                title.append(", ");
             }
-            snippet.append(address.getThoroughfare());
+            title.append(address.getThoroughfare());
+        }
+        if (address.getPostalCode() != null)
+        {
+            if (!title.toString().isEmpty())
+            {
+                title.append(", ");
+            }
+            title.append(address.getPostalCode());
         }
         if (address.getLocality() != null)
         {
-            if (!snippet.toString().isEmpty())
-            {
-                snippet.append(", ");
-            }
             snippet.append(address.getLocality());
         }
         if (address.getAdminArea() != null)
@@ -93,6 +101,11 @@ public class Utils
             }
             snippet.append(address.getAdminArea());
         }
+        if(title.toString().isEmpty())
+        {
+            title.append(getFormattedDate());
+        }
+        System.out.println("title: "+title+" snippet: "+snippet);
         return new String[]{title.toString(), snippet.toString()};
     }
 
@@ -189,5 +202,66 @@ public class Utils
         {
             polyline.remove();
         }
+    }
+
+    public static void addMarker(Marker marker)
+    {
+        mMarkerList.add(marker);
+    }
+
+    public static void clearMarkers()
+    {
+        for(Marker marker: mMarkerList)
+        {
+            marker.remove();
+        }
+    }
+
+    public static void dump(Object o)
+    {
+        if(o == null)
+        {
+            System.out.println("object is null");
+            return;
+        }
+        Field[] fields = o.getClass().getDeclaredFields();
+        if(fields.length == 0)
+        {
+            System.out.println("No fields");
+        }
+        for (int i=0; i<fields.length; i++)
+        {
+            try
+            {
+                System.out.println(fields[i].getName() + " - " + fields[i].get(o));
+                dump(fields[i]);
+            }
+            catch(Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static String getDirectionURL(Location location,LatLng latLng, Context context, String mode)
+    {
+        StringBuilder URL = new StringBuilder("https://maps.googleapis.com/maps/api/directions/json?");
+        URL.append("origin=" + location.getLatitude() + "," + location.getLongitude());
+        URL.append("&destination=" + latLng.latitude + "," + latLng.longitude);
+        URL.append("&key=" + context.getString(R.string.google_maps_key));
+        URL.append("&mode=" + mode);
+        System.out.println(URL);
+        return URL.toString();
+    }
+
+    public static String getDirectionURL(LatLng userLatLng,LatLng latLng, Context context, String mode)
+    {
+        StringBuilder URL = new StringBuilder("https://maps.googleapis.com/maps/api/directions/json?");
+        URL.append("origin=" + userLatLng.latitude + "," + userLatLng.longitude);
+        URL.append("&destination=" + latLng.latitude + "," + latLng.longitude);
+        URL.append("&key=" + context.getString(R.string.google_maps_key));
+        URL.append("&mode=" + mode);
+        System.out.println(URL);
+        return URL.toString();
     }
 }

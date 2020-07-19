@@ -6,6 +6,8 @@
     <color name="transparent">#00ffffff</color>
     <color name="text">#000000</color>
     <color name="search">#558a7d</color>
-    <color name="red">#FF0000</color>
+    <color name="red">#AA0000</color>
     <color name="translucent_color">#CCFFFFFF</color>
+    <color name="background">#ffffff</color>
+    <color name="section">#CCCCCC</color>
 </resources>

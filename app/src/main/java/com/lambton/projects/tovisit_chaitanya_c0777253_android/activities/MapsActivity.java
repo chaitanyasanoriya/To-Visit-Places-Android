@@ -12,6 +12,7 @@ import android.app.assist.AssistStructure;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
@@ -20,6 +21,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.text.format.DateFormat;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -55,34 +57,35 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, Callbacks
 {
 
     private static final int REQUEST_CODE = 1;
-    private static final float DEFAULT_ZOOM_LEVEL = 14f;
+    private static final float DEFAULT_ZOOM_LEVEL = 13.25f;
     private static final int RADIUS = 2500;
     private static final String STARTUP_PLACES = "cafe";
+    private static final String VISITED_TEXT = " (Visited)";
 
     private GoogleMap mMap;
     private LocationManager mLocationManager;
     private BottomNavigationView mBottomNavigationView;
     private Marker mMarker;
-    private String mTitle = "", mSubTitle = "";
     private int mIcon = R.mipmap.cafe_marker;
-    private FavouritePlace mFavouritePlace = null;
+        private FavouritePlace mFavouritePlace = null;
     private FavouritePlaceViewModel mFavouritePlaceViewModel;
     private EditText mSearchEditText;
     private int mMapStyle;
     private int mSelectedSort = R.id.standard_radio;
-    private int mMapType = GoogleMap.MAP_TYPE_NORMAL;
     private int mSelectedType = R.id.normal_radio;
     private int mStrokeColor = Color.RED;
     private String mMode = "driving";
     private ToggleButton mToggleButton;
     private Marker mInfoMarker;
-    private String [] mInfoString;
+    private String[] mInfoString;
+    private List<FavouritePlace> mFavouritePlaceList;
 
 
     @Override
@@ -90,12 +93,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         setMemberVariables();
+        detectDarkMode();
         checkPermissions();
+    }
+
+    private void detectDarkMode()
+    {
+        int currentNightMode = this.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        switch (currentNightMode)
+        {
+            case Configuration.UI_MODE_NIGHT_NO:
+                mMapStyle = R.raw.standard;
+                mSelectedSort = R.id.standard_radio;
+                break;
+            case Configuration.UI_MODE_NIGHT_YES:
+                mMapStyle = R.raw.night;
+                mSelectedSort = R.id.night_radio;
+                break;
+        }
     }
 
     private void setMemberVariables()
@@ -107,6 +126,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mSearchEditText = findViewById(R.id.search_edittext);
         mToggleButton = findViewById(R.id.toggle_btn);
         mMapStyle = R.raw.standard;
+        mFavouritePlaceViewModel.getFavouritePlaceList().observe(this, favouritePlaces -> mFavouritePlaceList = favouritePlaces);
+        mFavouritePlace = (FavouritePlace) getIntent().getSerializableExtra("favouriteplace");
+        mSearchEditText.setOnKeyListener(mOnKeyListener);
+    }
+
+    private void addSelectedMarker()
+    {
+        if (mFavouritePlace == null)
+        {
+            return;
+        }
+        MarkerOptions markerOptions = createMarkerOptions(new LatLng(mFavouritePlace.getLat(), mFavouritePlace.getLng()));
+        markerOptions = markerOptions.title(mFavouritePlace.getTitle()).snippet(mFavouritePlace.getSubtitle()).icon(BitmapDescriptorFactory.fromResource(R.mipmap.star_map));
+        mMarker = mMap.addMarker(markerOptions);
+        mMarker.setTag("custom");
+        if (mFavouritePlace.isVisited())
+        {
+            mMarker.setSnippet(mMarker.getSnippet() + VISITED_TEXT);
+        }
+        mMarker.showInfoWindow();
+        zoomToMarker(mMarker);
     }
 
     /**
@@ -130,6 +170,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     /**
      * Method to check if the app has User Location Permission
+     *
      * @return - True if the app has User Location Permission
      */
     private boolean hasLocationPermission()
@@ -163,9 +204,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Location location = getCurrentLocation();
         if (location != null)
         {
-            LatLng latLng = new LatLng(location.getLatitude(),location.getLongitude());
+            LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, DEFAULT_ZOOM_LEVEL));
-//            showLaunchNearbyPlaces(latLng,STARTUP_PLACES);
+            showLaunchNearbyPlaces(latLng, STARTUP_PLACES);
         }
     }
 
@@ -196,6 +237,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             return;
         }
         enableUserLocationAndZoom();
+        addSelectedMarker();
     }
 
     private void setOnClickListeners()
@@ -205,11 +247,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnMapLongClickListener(mOnMapLongClickListener);
         mMap.setOnMarkerClickListener(mOnMarkerClickListener);
         mMap.setOnPolylineClickListener(mOnPolylineClickListener);
+        mMap.setOnMarkerDragListener(mOnMarkerDragListener);
     }
 
     private void setUISettings()
     {
-        mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(MapsActivity.this,mMapStyle));
+        mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(MapsActivity.this, mMapStyle));
         mMap.getUiSettings().setMapToolbarEnabled(false);
         mMap.getUiSettings().setMyLocationButtonEnabled(false);
         mMap.getUiSettings().setCompassEnabled(false);
@@ -217,30 +260,32 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     public void backClicked(View view)
     {
-        Intent intent = new Intent(MapsActivity.this,MainActivity.class);
-        startActivity(intent);
-//        finish();
+        /*Intent intent = new Intent(MapsActivity.this,MainActivity.class);
+        startActivity(intent);*/
+        finish();
     }
 
     public void showLaunchNearbyPlaces(LatLng latLng, String placeType)
     {
-        String url = getPlaceURL(latLng.latitude,latLng.longitude,placeType);
+        String url = getPlaceURL(latLng.latitude, latLng.longitude, placeType);
         showNearbyPlaces(url);
     }
 
-    private String getPlaceURL(double latitude, double longitude, String placeType) {
+    private String getPlaceURL(double latitude, double longitude, String placeType)
+    {
         StringBuilder URL = new StringBuilder("https://maps.googleapis.com/maps/api/place/nearbysearch/json?");
-        URL.append("location="+latitude + ","+ longitude);
-        URL.append("&radius="+RADIUS);
-        URL.append("&type="+placeType);
-        URL.append("&key="+getString(R.string.google_maps_key));
+        URL.append("location=" + latitude + "," + longitude);
+        URL.append("&radius=" + RADIUS);
+        URL.append("&type=" + placeType);
+        URL.append("&key=" + getString(R.string.google_maps_key));
         System.out.println(URL);
         return URL.toString();
     }
 
-    private void showNearbyPlaces(String url) {
+    private void showNearbyPlaces(String url)
+    {
 
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, response -> GetByVolley.getNearbyPlaces(response,mMap,mIcon),null);
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, response -> GetByVolley.getNearbyPlaces(response, mMap, mIcon), null);
         VolleySingleton.getInstance(this).addToRequestQueue(jsonObjectRequest);
     }
 
@@ -269,7 +314,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     mIcon = R.mipmap.police_marker;
                     break;
             }
-            String url = getPlaceURL(location.getLatitude(),location.getLongitude(), item.getTitle().toString().toLowerCase());
+            String url = getPlaceURL(location.getLatitude(), location.getLongitude(), item.getTitle().toString().toLowerCase());
             showNearbyPlaces(url);
             return true;
         }
@@ -280,10 +325,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private void addMarker(LatLng latLng)
     {
         Utils.clearPolylines();
-        if(mMarker != null)
+        if (mMarker != null)
         {
             Object object = mMarker.getTag();
-            if(object != null && ((String) object).equals("custom"))
+            if (object != null && ((String) object).equals("custom"))
             {
                 mMarker.remove();
             }
@@ -292,42 +337,40 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         MarkerOptions markerOptions = createMarkerOptions(latLng);
         mMarker = mMap.addMarker(markerOptions);
         mMarker.setTag("custom");
-        setInfoAsync(latLng ,mMarker);
+        zoomToMarker(mMarker);
+        setInfoAsync(latLng, mMarker);
     }
 
-    private void setInfoAsync(LatLng latLng,Marker mMarker)
+    private void setInfoAsync(LatLng latLng, Marker mMarker)
     {
         new Thread(() ->
         {
             try
             {
                 Geocoder geocoder = new Geocoder(MapsActivity.this);
-                Address address = geocoder.getFromLocation(latLng.latitude,latLng.longitude,1).get(0);
-                String [] strings = Utils.getFormattedAddress(address);
-                if(!strings[0].isEmpty())
+                Address address = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1).get(0);
+                String[] strings = Utils.getFormattedAddress(address);
+                if (!strings[0].isEmpty())
                 {
                     MapsActivity.this.runOnUiThread(() ->
                     {
-                        mTitle = strings[0];
-                        mSubTitle = strings[1];
-                        setInfo(strings[0],strings[1],mMarker);
+                        setInfo(strings[0], strings[1], mMarker);
                     });
-                }
-                else
+                } else
                 {
-                    MapsActivity.this.runOnUiThread(() -> setInfo(Utils.getFormattedDate(),"",mMarker));
+                    MapsActivity.this.runOnUiThread(() -> setInfo(Utils.getFormattedDate(), "", mMarker));
                 }
             } catch (IOException e)
             {
                 e.printStackTrace();
-                MapsActivity.this.runOnUiThread(() -> setInfo(Utils.getFormattedDate(),"",mMarker));
+                MapsActivity.this.runOnUiThread(() -> setInfo(Utils.getFormattedDate(), "", mMarker));
             }
         }).start();
     }
 
     private void setInfo(String title, String snippet, Marker mMarker)
     {
-        System.out.println("title: "+title+" snippet: "+snippet);
+        System.out.println("title: " + title + " snippet: " + snippet);
         mMarker.setTitle(title);
         mMarker.setSnippet(snippet);
         mMarker.showInfoWindow();
@@ -340,27 +383,32 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     GoogleMap.OnInfoWindowClickListener mOnInfoWindowClickListener = marker ->
     {
-        Object object = marker.getTag();
-        if(mFavouritePlace == null)
-        {
-            marker.setIcon(BitmapDescriptorFactory.fromResource(R.mipmap.star_map));
-            if(object != null && ((String) object).equals("custom"))
-            {
-                mFavouritePlace = new FavouritePlace(marker.getTitle(),marker.getSnippet(),marker.getPosition().latitude,marker.getPosition().longitude,new Date(),false,false);
-                mFavouritePlaceViewModel.insert(mFavouritePlace, this);
-            }
-            else
-            {
-                addToFavourite(marker);
-            }
-        }
-        else
+        if (isSameAsFavouritePlace(mFavouritePlace, marker))
         {
             showDeleteFavouritePlace(marker);
+        } else
+        {
+            marker.setIcon(BitmapDescriptorFactory.fromResource(R.mipmap.star_map));
+            String snippet = marker.getSnippet();
+            if (snippet == null)
+            {
+                snippet = "";
+            }
+            mFavouritePlace = new FavouritePlace(marker.getTitle(), snippet, marker.getPosition().latitude, marker.getPosition().longitude, new Date(), false, false);
+            mFavouritePlaceViewModel.insert(mFavouritePlace, this);
         }
     };
 
-    private void addToFavourite(Marker marker)
+    private boolean isSameAsFavouritePlace(FavouritePlace favouritePlace, Marker marker)
+    {
+        if (favouritePlace != null && favouritePlace.getTitle().equals(marker.getTitle()) && favouritePlace.getSubtitle().equals(marker.getSnippet().replace(VISITED_TEXT, "")) && favouritePlace.getLat() == marker.getPosition().latitude && favouritePlace.getLng() == marker.getPosition().longitude)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    private void updateFavourite(Marker marker, FavouritePlace favouritePlace)
     {
         LatLng latLng = marker.getPosition();
         new Thread(() ->
@@ -368,19 +416,43 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             try
             {
                 Geocoder geocoder = new Geocoder(MapsActivity.this);
-                Address address = geocoder.getFromLocation(latLng.latitude,latLng.latitude,1).get(0);
-                String [] strings = Utils.getFormattedAddress(address);
+                Address address = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1).get(0);
+                String[] strings = Utils.getFormattedAddress(address);
+                if (strings[0] == null || strings[0].isEmpty())
+                {
+                    strings[0] = Utils.getFormattedDate();
+                }
                 MapsActivity.this.runOnUiThread(() ->
                 {
-                    FavouritePlace favouritePlace = new FavouritePlace(strings[0],strings[1],marker.getPosition().latitude,marker.getPosition().longitude,new Date(),false,false);
-                    mFavouritePlaceViewModel.insert(favouritePlace, this);
+                    marker.hideInfoWindow();
+                    favouritePlace.setTitle(strings[0]);
+                    favouritePlace.setSubtitle(strings[1]);
+                    favouritePlace.setLat(latLng.latitude);
+                    favouritePlace.setLng(latLng.longitude);
+                    mFavouritePlaceViewModel.update(favouritePlace);
                     mFavouritePlace = favouritePlace;
+                    marker.setTitle(strings[0]);
+                    marker.setSnippet(strings[1]);
+                    setMarkerVisitedStatus(marker,favouritePlace);
+                    marker.showInfoWindow();
                 });
             } catch (IOException e)
             {
                 e.printStackTrace();
             }
         }).start();
+    }
+
+    private void setMarkerVisitedStatus(Marker marker, FavouritePlace favouritePlace)
+    {
+        if(favouritePlace.isVisited())
+        {
+            marker.setSnippet(marker.getSnippet()+VISITED_TEXT);
+        }
+        else
+        {
+            marker.setSnippet(marker.getSnippet().replace(VISITED_TEXT,""));
+        }
     }
 
     private void showDeleteFavouritePlace(Marker marker)
@@ -404,71 +476,83 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     GoogleMap.OnInfoWindowLongClickListener mOnInfoWindowLongClickListener = marker ->
     {
         marker.hideInfoWindow();
-        System.out.println(1);
-        if(mFavouritePlace != null)
+        FavouritePlace favouritePlace = getFavouritePlaceAssociated(marker);
+        if (favouritePlace != null)
         {
             String snippet = marker.getSnippet();
-            if(snippet != null && snippet.isEmpty())
+            if (snippet != null && snippet.isEmpty())
             {
                 snippet = "";
             }
-            if(mFavouritePlace.isVisited())
+            if (favouritePlace.isVisited())
             {
-                mFavouritePlace.setVisited(false);
-                marker.setSnippet(snippet.replace(" (Visited)",""));
-            }
-            else
+                favouritePlace.setVisited(false);
+                marker.setSnippet(snippet.replace(VISITED_TEXT, ""));
+            } else
             {
-                mFavouritePlace.setVisited(true);
-                marker.setSnippet(snippet+" (Visited)");
+                favouritePlace.setVisited(true);
+                marker.setSnippet(snippet + VISITED_TEXT);
             }
-            mFavouritePlaceViewModel.update(mFavouritePlace);
+            mFavouritePlaceViewModel.update(favouritePlace);
         }
         marker.showInfoWindow();
     };
 
+    private FavouritePlace getFavouritePlaceAssociated(Marker marker)
+    {
+        for (FavouritePlace favouritePlace : mFavouritePlaceList)
+        {
+            if (isSameAsFavouritePlace(favouritePlace, marker))
+            {
+                return favouritePlace;
+            }
+        }
+        return null;
+    }
 
 
     public void searchAddressClicked(View view)
     {
         String text = mSearchEditText.getText().toString().trim();
-        if(!text.isEmpty())
+        if (!text.isEmpty())
         {
             try
             {
                 Geocoder geocoder = new Geocoder(this);
                 Location location = getCurrentLocation();
-                System.out.println(1);
-                Address address = geocoder.getFromLocationName(text,1,location.getLatitude() - 1, location.getLongitude() - 1, location.getLatitude() + 1, location.getLongitude() + 1).get(0);
-                System.out.println(2);
-                MarkerOptions markerOptions = createMarkerOptions(new LatLng(address.getLatitude(),address.getLongitude()));
-                System.out.println(3);
-                String [] strings = Utils.getFormattedAddress(address);
-                if(strings[0].isEmpty())
+                Address address = geocoder.getFromLocationName(text, 1, location.getLatitude() - 1, location.getLongitude() - 1, location.getLatitude() + 1, location.getLongitude() + 1).get(0);
+                String[] strings = Utils.getFormattedAddress(address);
+                MarkerOptions markerOptions = createMarkerOptions(new LatLng(address.getLatitude(), address.getLongitude()));
+                if (strings[0].isEmpty())
                 {
                     markerOptions.title(Utils.getFormattedDate());
-                }
-                else
+                } else
                 {
                     markerOptions.title(strings[0]);
                 }
                 markerOptions.snippet(strings[1]);
-                if(mMarker != null)
+                if (mMarker != null)
                 {
                     mMarker.remove();
                 }
                 mFavouritePlace = null;
                 mMarker = mMap.addMarker(markerOptions);
                 mMarker.setTag("custom");
+                mMarker.showInfoWindow();
+                zoomToMarker(mMarker);
             } catch (IOException e)
             {
                 e.printStackTrace();
-            }
-            catch (IndexOutOfBoundsException e)
+            } catch (IndexOutOfBoundsException e)
             {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void zoomToMarker(Marker marker)
+    {
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(marker.getPosition(), DEFAULT_ZOOM_LEVEL));
     }
 
     public void showMapStyleAlert(View view)
@@ -512,7 +596,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void updateMap(int res)
     {
-        mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(MapsActivity.this,res));
+        mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(MapsActivity.this, res));
     }
 
 
@@ -561,83 +645,54 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         @Override
         public boolean onMarkerClick(Marker marker)
         {
-
-            if(mMarker != null)
-            {
-                Object object = mMarker.getTag();
-                if(object != null &&((String) object).equals("custom"))
-                {
-                    mMarker.remove();
-                }
-            }
             mMarker = marker;
-            mFavouritePlace = null;
             marker.showInfoWindow();
             return true;
         }
     };
 
+    private boolean isNotSameMarker(Marker marker)
+    {
+        boolean cond1 = mMarker.getTitle().equals(marker.getTitle());
+        boolean cond2 = true;
+        if (mMarker.getSnippet() != null && marker.getSnippet() != null)
+        {
+            cond2 = mMarker.getSnippet().equals(marker.getSnippet());
+        }
+        boolean cond3 = marker.getPosition().latitude == mMarker.getPosition().latitude;
+        boolean cond4 = marker.getPosition().longitude == mMarker.getPosition().longitude;
+        if (cond1 && cond2 && cond3 && cond4)
+        {
+            return false;
+        }
+        return true;
+    }
+
     public void navigateClicked(View view)
     {
         LatLng latLng = null;
-        String title = "";
-        String snippet = "";
-        if(mFavouritePlace != null)
-        {
-            latLng = new LatLng(mFavouritePlace.getLat(),mFavouritePlace.getLng());
-            title = mFavouritePlace.getTitle();
-            snippet = mFavouritePlace.getSubtitle();
-        }
-        else if(mMarker != null)
+        if (mMarker != null)
         {
             latLng = mMarker.getPosition();
-            title = mMarker.getTitle();
-            snippet = mMarker.getSnippet();
         }
 
-        if(title == null || title.isEmpty())
+        if (latLng == null)
         {
-            title = Utils.getFormattedDate();
-        }
-
-        if(latLng == null)
+            Utils.showError("Destination not selected", "Please select a destination to navigate to", MapsActivity.this);
+        } else
         {
-            Utils.showError("Destination not selected","Please select a destination to navigate to",MapsActivity.this);
-        }
-        else
-        {
-            LatLng finalLatLng = latLng;
-            String finalTitle = title;
-            String finalSnippet = snippet;
-            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, getDirectionURL(latLng), null, new Response.Listener<JSONObject>() {
-                @Override
-                public void onResponse(JSONObject response) {
-                    mInfoString = GetByVolley.getDirection(response,mMap, finalLatLng,mStrokeColor, finalTitle, finalSnippet);
-                }
-            },null);
+            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, Utils.getDirectionURL(getCurrentLocation(),latLng, this,mMode), null, response -> mInfoString = GetByVolley.getDirection(response, mMap, mStrokeColor), null);
             VolleySingleton.getInstance(this).addToRequestQueue(jsonObjectRequest);
         }
     }
 
-    private String getDirectionURL(LatLng latLng) {
-        Location userlocation = getCurrentLocation();
-        StringBuilder URL = new StringBuilder("https://maps.googleapis.com/maps/api/directions/json?");
-        URL.append("origin="+userlocation.getLatitude() + ","+ userlocation.getLongitude());
-        URL.append("&destination="+latLng.latitude+","+latLng.longitude);
-        URL.append("&key="+getString(R.string.google_maps_key));
-        URL.append("&mode="+mMode);
-        System.out.println(URL);
-        return URL.toString();
-    }
-
     public void modeClicked(View view)
     {
-        if(mToggleButton.isChecked())
+        if (mToggleButton.isChecked())
         {
             mStrokeColor = Color.GREEN;
             mMode = "walking";
-        }
-        else
+        } else
         {
             mStrokeColor = Color.RED;
             mMode = "driving";
@@ -647,7 +702,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void inserted(Long id)
     {
-        if(mFavouritePlace != null)
+        if (mFavouritePlace != null)
         {
             mFavouritePlace.setId(id);
         }
@@ -661,16 +716,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             LatLng place1 = polyline.getPoints().get(0);
             LatLng place2 = polyline.getPoints().get(1);
             LatLng mid_point = Utils.midPoint(place1.latitude, place1.longitude, place2.latitude, place2.longitude);
-            double distance = Utils.distance(place1.latitude, place1.longitude, place2.latitude, place2.longitude);
             showDistanceMarker(mid_point, mInfoString[0], mInfoString[1]);
         }
     };
 
     /**
      * Method to show Marker at Location will distance and snippet
-     * @param latLng - Location of the Marker
+     *
+     * @param latLng   - Location of the Marker
      * @param distance - Distance to be displayed
-     * @param snippet - Snippet to be displayed
+     * @param snippet  - Snippet to be displayed
      */
     private void showDistanceMarker(LatLng latLng, String distance, String snippet)
     {
@@ -688,4 +743,47 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mInfoMarker = mMap.addMarker(options);
         mInfoMarker.showInfoWindow();
     }
+
+    private GoogleMap.OnMarkerDragListener mOnMarkerDragListener = new GoogleMap.OnMarkerDragListener()
+    {
+        @Override
+        public void onMarkerDragStart(Marker marker)
+        {
+        }
+
+        @Override
+        public void onMarkerDrag(Marker marker)
+        {
+
+        }
+
+        @Override
+        public void onMarkerDragEnd(Marker marker)
+        {
+            Utils.clearPolylines();
+            if (mFavouritePlace != null)
+            {
+                updateFavourite(marker, mFavouritePlace);
+            }
+            else
+            {
+                setInfoAsync(marker.getPosition(),marker);
+            }
+        }
+    };
+
+    public void myLocationClicked(View view)
+    {
+        enableUserLocationAndZoom();
+    }
+
+    EditText.OnKeyListener mOnKeyListener = (view, keyCode, event) ->
+    {
+        if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER)
+        {
+            searchAddressClicked(null);
+            return true;
+        }
+        return false;
+    };
 }

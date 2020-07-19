@@ -68,7 +68,10 @@ public class FavouritePlaceRepository
         @Override
         protected void onPostExecute(Long id)
         {
-            mCallbacks.inserted(id);
+            if(mCallbacks != null)
+            {
+                mCallbacks.inserted(id);
+            }
             super.onPostExecute(id);
         }
     }

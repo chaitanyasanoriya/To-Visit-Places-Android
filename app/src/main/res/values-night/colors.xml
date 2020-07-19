@@ -3,4 +3,6 @@
     <color name="text">#ffffff</color>
     <color name="translucent_color">#CC000000</color>
     <color name="search">#ffffff</color>
+    <color name="background">#000000</color>
+    <color name="section">#333333</color>
 </resources>

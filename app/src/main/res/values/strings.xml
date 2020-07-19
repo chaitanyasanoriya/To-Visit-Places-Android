@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Contacts</string>
+    <string name="app_name">To Visit Places</string>
     <string name="number_of_contacts">Number of Contacts: </string>
     <string name="title_activity_contact_details">ContactDetailsActivity</string>
     <string name="number_of_places">"Number of Favourite Places: "</string>
@@ -9,6 +9,7 @@
     <string name="restaurant">Restaurant</string>
     <string name="museum">Museum</string>
     <string name="police">Police</string>
+    <string name="title_activity_doodle_maps">Map</string>
     <!--
     This string is used for square devices and overridden by hello_world in
     values-round/strings.xml for round devices.

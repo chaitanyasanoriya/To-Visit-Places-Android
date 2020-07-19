@@ -38,6 +38,7 @@ public class VolleyParser {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+
         return distanceDurationDictinory;
     }
 

@@ -18,25 +18,28 @@ import java.util.List;
 
 public class GetByVolley {
 
-    public static String[] getDirection(JSONObject jsonObject, GoogleMap googleMap, LatLng latLng, int strokeColor, String title, String snippet)
+    public static String[] getDirection(JSONObject jsonObject, GoogleMap googleMap, int strokeColor)
     {
-        HashMap<String, String> distances = null;
-        VolleyParser directionParser = new VolleyParser();
-        distances = directionParser.parseDistance(jsonObject);
-        String distance = distances.get("distance");
-        String duration = distances.get("duration");
-        String [] directionsList = directionParser.parseDirections(jsonObject);
-        displayDirections(directionsList, googleMap, latLng, strokeColor, title, snippet);
-        return new String[] {distance,duration};
+        try
+        {
+            HashMap<String, String> distances = null;
+            VolleyParser directionParser = new VolleyParser();
+            distances = directionParser.parseDistance(jsonObject);
+            String distance = distances.get("distance");
+            String duration = distances.get("duration");
+            String [] directionsList = directionParser.parseDirections(jsonObject);
+            displayDirections(directionsList, googleMap, strokeColor);
+            return new String[] {distance,duration};
+        }
+        catch (NullPointerException e)
+        {
+            e.printStackTrace();
+        }
+        return new String[]{"",""};
     }
 
-    private static void displayDirections(String[] directionsList, GoogleMap googleMap, LatLng latLng, int strokeColor, String title, String snippet) {
+    private static void displayDirections(String[] directionsList, GoogleMap googleMap, int strokeColor) {
         Utils.clearPolylines();
-//        MarkerOptions options = new MarkerOptions().position(latLng)
-//                .title(title)
-//                .snippet(snippet)
-//                .draggable(true);
-//        googleMap.addMarker(options);
         for(String direction: directionsList)
         {
             PolylineOptions polylineOptions = new PolylineOptions()
@@ -56,8 +59,7 @@ public class GetByVolley {
     }
 
     private static void showNearbyPlaces(List<HashMap<String, String>> nearbyPlaces, GoogleMap googleMap, int icon) {
-        System.out.println("clearing");
-        googleMap.clear();
+        Utils.clearMarkers();
         for (HashMap<String, String> nearbyPlace: nearbyPlaces)
         {
             String placeName = nearbyPlace.get("place_name");
@@ -69,8 +71,9 @@ public class GetByVolley {
             LatLng latLng = new LatLng(lat,lng);
             MarkerOptions options = new MarkerOptions().position(latLng)
                     .title(placeName)
+                    .snippet(vicinity)
                     .icon(BitmapDescriptorFactory.fromResource(icon));
-            googleMap.addMarker(options);
+            Utils.addMarker(googleMap.addMarker(options));
         }
     }
 }
