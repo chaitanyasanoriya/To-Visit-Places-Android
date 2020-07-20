@@ -2,6 +2,7 @@ package com.lambton.projects.tovisit_chaitanya_c0777253_android.activities;
 
 import androidx.fragment.app.FragmentActivity;
 
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
@@ -18,6 +19,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
@@ -66,6 +68,14 @@ public class DoodleMapsActivity extends FragmentActivity implements OnMapReadyCa
         mMap.setOnMapClickListener(this);
         mMap.setOnPolylineClickListener(this);
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(43.6426,-79.3871),10));
+        if(isDarkMode())
+        {
+            mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(DoodleMapsActivity.this, R.raw.night));
+        }
+        else
+        {
+            mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(DoodleMapsActivity.this, R.raw.standard));
+        }
     }
 
     public void backClicked(View view)
@@ -191,5 +201,10 @@ public class DoodleMapsActivity extends FragmentActivity implements OnMapReadyCa
 
         mInfoMarker = mMap.addMarker(options);
         mInfoMarker.showInfoWindow();
+    }
+
+    private boolean isDarkMode()
+    {
+        return (this.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
     }
 }

@@ -49,17 +49,8 @@ public class MainActivity extends AppCompatActivity
         mRecyclerView = findViewById(R.id.recyclerview);
         mNoFavouritePlacesTextView = findViewById(R.id.no_favourite_places_textview);
         mFavouritePlaceViewModel = new ViewModelProvider(this).get(FavouritePlaceViewModel.class);
-        mFavouritePlaceViewModel.getFavouritePlaceList().observe(this, favouritePlaces -> MainActivity.this.setFavouritePlaces(favouritePlaces));
-//        populate();
+        mFavouritePlaceViewModel.getFavouritePlaceList().observe(this, favouritePlaces -> MainActivity.this.setFavouritePlaces(favouritePlaces)); 
     }
-
-    /*private void populate()
-    {
-        for (int i = 0; i < 5; i++)
-        {
-            mFavouritePlaceViewModel.insert(new FavouritePlace(String.valueOf(i), String.valueOf(i), 0, 0, new Date(), true,false));
-        }
-    }*/
 
     private void setupRecyclerView()
     {
