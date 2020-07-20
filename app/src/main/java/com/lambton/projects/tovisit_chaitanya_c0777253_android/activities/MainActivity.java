@@ -77,11 +77,14 @@ public class MainActivity extends AppCompatActivity
         {
             mNoFavouritePlacesTextView.setVisibility(View.GONE);
             mRecyclerView.setVisibility(View.VISIBLE);
-            mFavouritePlaceList.add(0,new FavouritePlace("To Visit place",null,0,0, new Date(),false,true));
-            int pos = getVisitedPlaces(favouritePlaces);
-            if(pos != favouritePlaces.size())
+            if(!containsToVisitPlace())
             {
-                mFavouritePlaceList.add(pos,new FavouritePlace("Visited place",null,0,0, new Date(),false,true));
+                mFavouritePlaceList.add(0,new FavouritePlace("To Visit place",null,0,0, new Date(),false,true));
+                int pos = getVisitedPlaces(favouritePlaces);
+                if(pos != favouritePlaces.size())
+                {
+                    mFavouritePlaceList.add(pos,new FavouritePlace("Visited place",null,0,0, new Date(),false,true));
+                }
             }
 
         } else
@@ -98,6 +101,18 @@ public class MainActivity extends AppCompatActivity
         }
 
         mRecyclerViewAdapter.setFavouritePlaces(mFavouritePlaceList);
+    }
+
+    private boolean containsToVisitPlace()
+    {
+        for(FavouritePlace favouritePlace: mFavouritePlaceList)
+        {
+            if(favouritePlace.getTitle().equals("To Visit place"))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     private int getVisitedPlaces(List<FavouritePlace> favouritePlaces)

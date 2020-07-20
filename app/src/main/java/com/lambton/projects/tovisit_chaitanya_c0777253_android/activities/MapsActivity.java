@@ -101,6 +101,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         setMemberVariables();
         detectDarkMode();
         checkPermissions();
+        System.out.println("onCreate");
     }
 
     private void detectDarkMode()
@@ -117,6 +118,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mSelectedSort = R.id.night_radio;
                 break;
         }
+    }
+
+    private boolean isDarkMode()
+    {
+        return (this.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
     }
 
     private void setMemberVariables()
@@ -286,7 +292,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private void showNearbyPlaces(String url)
     {
 
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, response -> GetByVolley.getNearbyPlaces(response, mMap, mIcon), null);
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, response ->
+        {
+            GetByVolley.getNearbyPlaces(response, mMap, mIcon);
+            if(isDarkMode())
+            {
+                Utils.setLightMarkers(this,mMap,mIcon);
+            }
+            else
+            {
+                Utils.setOriginalMarker(mIcon,mMap);
+            }
+        }, null);
         VolleySingleton.getInstance(this).addToRequestQueue(jsonObjectRequest);
     }
 
@@ -792,4 +809,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         return false;
     };
+
+//    @Override
+//    protected void onResume()
+//    {
+//        super.onResume();
+//        if(isDarkMode())
+//        {
+//            Utils.setLightMarkers(this,mMap,mIcon);
+//        }
+//        else
+//        {
+//            Utils.setOriginalMarker(mIcon,mMap);
+//        }
+//    }
 }

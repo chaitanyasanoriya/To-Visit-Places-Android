@@ -277,35 +277,50 @@ public class Utils
 
     public static void setLightMarkers(Context context, GoogleMap googleMap, int res)
     {
-        Bitmap sourceBitmap = BitmapFactory.decodeResource(context.getResources(),res);
-        Paint paint = new Paint();
-        paint.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN));
-        Bitmap bitmapResult = Bitmap.createBitmap(sourceBitmap.getWidth(), sourceBitmap.getHeight(), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmapResult);
-        canvas.drawBitmap(sourceBitmap, 0, 0, paint);
-        googleMap.clear();
-        List<Marker> markerList = new ArrayList<>();
-        for(Marker marker: mMarkerList)
+        try
         {
-            MarkerOptions markerOptions = new MarkerOptions().position(marker.getPosition()).title(marker.getTitle()).snippet(marker.getSnippet()).draggable(marker.isDraggable()).icon(BitmapDescriptorFactory.fromBitmap(bitmapResult));
-            markerList.add(googleMap.addMarker(markerOptions));
-            marker.remove();
+            Bitmap sourceBitmap = BitmapFactory.decodeResource(context.getResources(),res);
+            Paint paint = new Paint();
+            paint.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN));
+            Bitmap bitmapResult = Bitmap.createBitmap(sourceBitmap.getWidth(), sourceBitmap.getHeight(), Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmapResult);
+            canvas.drawBitmap(sourceBitmap, 0, 0, paint);
+//            googleMap.clear();
+            List<Marker> markerList = new ArrayList<>();
+            for(Marker marker: mMarkerList)
+            {
+                MarkerOptions markerOptions = new MarkerOptions().position(marker.getPosition()).title(marker.getTitle()).snippet(marker.getSnippet()).draggable(marker.isDraggable()).icon(BitmapDescriptorFactory.fromBitmap(bitmapResult));
+                markerList.add(googleMap.addMarker(markerOptions));
+                marker.remove();
+            }
+            mMarkerList.clear();
+            mMarkerList.addAll(markerList);
         }
-        mMarkerList.clear();
-        mMarkerList.addAll(markerList);
+        catch (Exception e)
+        {
+
+        }
+
 //        return bitmapResult;
     }
 
     public static void setOriginalMarker(int res, GoogleMap googleMap)
     {
-        List<Marker> markerList = new ArrayList<>();
-        for(Marker marker: mMarkerList)
+        try
         {
-            marker.remove();
-            MarkerOptions markerOptions = new MarkerOptions().position(marker.getPosition()).title(marker.getTitle()).snippet(marker.getSnippet()).draggable(marker.isDraggable()).icon(BitmapDescriptorFactory.fromResource(res));
-            markerList.add(googleMap.addMarker(markerOptions));
+            List<Marker> markerList = new ArrayList<>();
+            for(Marker marker: mMarkerList)
+            {
+                marker.remove();
+                MarkerOptions markerOptions = new MarkerOptions().position(marker.getPosition()).title(marker.getTitle()).snippet(marker.getSnippet()).draggable(marker.isDraggable()).icon(BitmapDescriptorFactory.fromResource(res));
+                markerList.add(googleMap.addMarker(markerOptions));
+            }
+            mMarkerList.clear();
+            mMarkerList.addAll(markerList);
         }
-        mMarkerList.clear();
-        mMarkerList.addAll(markerList);
+        catch (Exception e)
+        {
+
+        }
     }
 }
